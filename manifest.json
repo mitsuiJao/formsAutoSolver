@@ -8,5 +8,16 @@
     ],
     "action": {
         "default_popup": "popup.html"
-    }
+    },
+    "background": {
+        "service_worker": "src/background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["src/content_scripts.js"],
+            "all_frames": true
+        }
+    ]
+    
 }
