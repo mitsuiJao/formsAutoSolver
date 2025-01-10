@@ -17,20 +17,26 @@ async function fetchImageAsBase64(url) {
     }
 }
 
-const API_KEY = ""
-const URL = "https://api.openai.com/v1/chat/completions?Content-Type=application/json";
+// fetchImageAsBase64(url)
+//     .then(base64 => {
+//         console.log(base64);
+//     })
+//     .catch(error => {
+//         console.error('Error:', error);
+//     });
 
-async function openAIreqest(s) {
-    let body = {
-        model: "gpt-4o-mini",
-        store: true,
-        messages: [
-            { role: "user", content: "" }
-        ]
-    }
+const API_KEY = "APIKEY"
+const URL = "https://api.openai.com/v1/chat/completions?Content-Type=application/json";
+body = {
+    "model": "gpt-4o",
+    "store": true,
+    "messages": [
+        { "role": "user", "content": "" }
+    ]
+}
+
+async function openAIreqest(body) {
     try {
-        body.messages[0].content += s;
-        // console.log(body);
         const response = fetch(URL, {
             method: 'POST',
             headers: {
@@ -48,49 +54,39 @@ async function openAIreqest(s) {
     }
 }
 
-const template1 = "\nPlease responce only the choice."
-const template2 = "\nIf you can answer the question accurately with the above information, please return only the answer."
-const template3 = "\n\nHere are your choices:"
-const template4 = "\nIf you absolutely cannot answer the question, please return 'null'."
-// console.log(request);
-
+const template1 = "Please answer using only the options"
+const template2 = "If you can answer the question accurately with the above information, please return only the answer. If you absolutely cannot answer the question, please return 'null'."
 chrome.runtime.onMessage.addListener(function (request, sender, callback) {
     console.log(request);
     request.forEach(element => {
         let content = element.q;
         if (element.img != null) {
-            fetchImageAsBase64(element.img)
+            fetchImageAsBase64(element.url)
                 .then(base64 => {
-                    content += "\n" + base64;
-                    if (element.is_text == true) {
-                        content += template2 + template4;
+                    content += base64;
+                    if (element.is_text == true){
+                        content += "\n" + template2;
                     } else {
-                        content += template1 + template4;
-                        content += template3 + "\n" + (element.choiceitem).join("\n");
+                        content += "\n" + template1;
+                        content += "\n\n" + (element.choiceitem).join("\n");
                     }
                     return content;
                 })
                 .then(content => {
-                    console.log(content);
                     return openAIreqest(content);
                 })
-                .then(res => {
-                    console.dir(res, { depth: null });
-                    console.log(element.id);
-                });
+                .then(res => console.log(res));
         } else {
-            if (element.is_text == true) {
-                content += template2 + template4;
+            if (element.is_text == true){
+                content += "\n" + template2;
             } else {
-                content += template1 + template4;
-                content += template3 + "\n" + (element.choiceitem).join("\n");
+                content += template1;
+                content += "\n\n" + (element.choiceitem).join("\n");
             }
-            console.log(content)
             openAIreqest(content)
-            .then(res => {
-                console.dir(res, { depth: null });
-                console.log(element.id);
-            });
+                .then(res => console.log(res));
         }
     });
+
+    return true
 })

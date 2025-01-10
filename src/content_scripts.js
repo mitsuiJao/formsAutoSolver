@@ -3,6 +3,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         let container = []
         let imgcontainer = [];
         let textinput = [];
+        let choiceitem = [];
 
         let elem = document.getElementById("question-list");
         console.log(elem);
@@ -38,9 +39,17 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                 textinput.push(false);
             }
 
+            const choice = child.querySelectorAll("div[data-automation-id='choiceItem']");
+            let choiceitem_forQ = [];
+            if (choice != null){
+                choice.forEach(choice => {
+                    choiceitem_forQ.push(choice.innerText);
+                });
+            }
 
             container.push(raw);
             imgcontainer.push(img);
+            choiceitem.push(choiceitem_forQ);
         }
         // console.log(container);
         // console.log(imgcontainer);
@@ -49,15 +58,16 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         let data = [];
         for (let i=0; i < container.length; i++){
             data.push({
-                id: i,
+                id: i+1,
                 q: container[i],
                 img: imgcontainer[i],
-                is_text: textinput[i]
+                is_text: textinput[i],
+                choiceitem: choiceitem[i]
             })
         }
 
         console.log(data);
-        chrome.runtime.sendMessage(elem.outerHTML);
+        chrome.runtime.sendMessage(data);
     }
     return;
 });
