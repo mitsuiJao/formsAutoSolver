@@ -1,47 +1,23 @@
-function fetchImageAsBinaryXHR(url, callback) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.responseType = 'arraybuffer'; // バイナリ形式で取得
-    xhr.onload = function () {
-        if (xhr.status === 200) {
-            const arrayBuffer = xhr.response;
-            const binaryData = new Uint8Array(arrayBuffer);
-            callback(null, binaryData);
-        } else {
-            callback(new Error(`HTTP error! status: ${xhr.status}`));
-        }
-    };
-    xhr.onerror = function () {
-        callback(new Error('Network error'));
-    };
-    xhr.send();
-}
-
-// 使用例
-fetchImageAsBinaryXHR('https://example.com/image.png', (err, binaryData) => {
-    if (err) {
-        console.error('Error fetching image:', err);
-    } else {
-        console.log(binaryData); // Uint8Array形式のバイナリデータ
-    }
-});
-
-
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
-    if (location.host == "forms.office.com"){
+    if (location.host == "forms.office.com") {
         let container = []
+        let imgcontainer = [];
+        let textinput = [];
+
         let elem = document.getElementById("question-list");
         console.log(elem);
-        for (let i = 0; i < elem.childNodes.length; i++){
+        for (let i = 0; i < elem.childNodes.length; i++) {
             let raw;
             const child = elem.childNodes[i];
-            const title = child.querySelectorAll("div[data-automation-id='questionTitle']");
+
+            const title = child.querySelectorAll("div[data-automation-id='questionTitle'], span[data-automation-id='questionTitle']");
             title.forEach(title => {
                 const title2 = title.querySelectorAll(".text-format-content");
                 title2.forEach(title2 => {
                     raw = title2.innerText;
                 });
             });
+
             const subtitle = child.querySelectorAll("div[data-automation-id='questionSubTitle']");
             subtitle.forEach(subtitle => {
                 const subtitle2 = subtitle.querySelectorAll(".text-format-content");
@@ -49,9 +25,38 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                     raw += "\n" + (subtitle2.innerText).replace(/\n/, "");
                 });
             });
+
+            let img = child.querySelector("img[role='img']");
+            if (img != null) {
+                img = img.getAttribute("src");
+            }
+
+            let opt = child.querySelector("input[data-automation-id='textInput']");
+            if (opt) {
+                textinput.push(true);
+            } else {
+                textinput.push(false);
+            }
+
+
             container.push(raw);
+            imgcontainer.push(img);
         }
-        console.log(container)
+        // console.log(container);
+        // console.log(imgcontainer);
+        // console.log(textinput);
+
+        let data = [];
+        for (let i=0; i < container.length; i++){
+            data.push({
+                id: i,
+                q: container[i],
+                img: imgcontainer[i],
+                is_text: textinput[i]
+            })
+        }
+
+        console.log(data);
         chrome.runtime.sendMessage(elem.outerHTML);
     }
     return;
