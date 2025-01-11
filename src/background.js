@@ -48,6 +48,13 @@ async function openAIreqest(s) {
     }
 }
 
+function sendToContents(content) {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        console.log(tabs);
+        chrome.tabs.sendMessage(tabs[0].id, JSON.stringify({ from: "background", contents: content }));
+    });
+}
+
 const template1 = "\nPlease answer only the options no matter what. This is because the following programs may not work properly."
 const template2 = "\nIf you can answer the question accurately with the above information, please return only the answer."
 const template3 = "\n\nHere are your choices:"
@@ -76,7 +83,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, callback) {
                 })
                 .then(res => {
                     console.dir(res, { depth: null });
-                    console.log(element.id);
+                const data = {id: element.id, content: res.choices[0].message.content}
+                sendToContents(data)
                 });
         } else {
             if (element.is_text == true) {
@@ -89,7 +97,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, callback) {
             openAIreqest(content)
             .then(res => {
                 console.dir(res, { depth: null });
-                console.log(element.id);
+                const data = {id: element.id, content: res.choices[0].message.content}
+                sendToContents(data)
             });
         }
     });
