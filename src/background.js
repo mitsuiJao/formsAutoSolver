@@ -48,7 +48,7 @@ async function openAIreqest(s) {
     }
 }
 
-const template1 = "\nPlease responce only the choice."
+const template1 = "\nPlease answer only the options no matter what. This is because the following programs may not work properly."
 const template2 = "\nIf you can answer the question accurately with the above information, please return only the answer."
 const template3 = "\n\nHere are your choices:"
 const template4 = "\nIf you absolutely cannot answer the question, please return 'null'."
@@ -61,7 +61,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, callback) {
         if (element.img != null) {
             fetchImageAsBase64(element.img)
                 .then(base64 => {
-                    content += "\n" + base64;
+                    content += "\n" + base64 + "\n";
                     if (element.is_text == true) {
                         content += template2 + template4;
                     } else {
